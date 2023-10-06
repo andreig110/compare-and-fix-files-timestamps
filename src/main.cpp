@@ -48,9 +48,28 @@ void FixFileTime(const wstring& destFilePath, bool isFile,
     CloseHandle(hFile);
 }
 
-void ProcessFilesOrDirs(const wstring& sourcePath, const wstring& destPath)
+void UpdateFileTimeIfEarlier(WIN32_FIND_DATAW& sourceFindFileData, WIN32_FIND_DATAW& destFindFileData, const wstring& destFilePath)
 {
-    //
+    PFILETIME creationTime, lastAccessTime, lastWriteTime;
+
+    if (CompareFileTime(&sourceFindFileData.ftCreationTime, &destFindFileData.ftCreationTime) < 0)
+        creationTime = &sourceFindFileData.ftCreationTime;
+    else
+        creationTime = NULL; // = &destFindFileData.ftCreationTime
+
+    if (CompareFileTime(&sourceFindFileData.ftLastAccessTime, &destFindFileData.ftLastAccessTime) < 0)
+        lastAccessTime = &sourceFindFileData.ftLastAccessTime;
+    else
+        lastAccessTime = NULL;
+
+    if (CompareFileTime(&sourceFindFileData.ftLastWriteTime, &destFindFileData.ftLastWriteTime) < 0)
+        lastWriteTime = &sourceFindFileData.ftLastWriteTime;
+    else
+        lastWriteTime = NULL;
+
+    bool isDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+    if (creationTime != NULL || lastAccessTime != NULL || lastWriteTime != NULL)
+        FixFileTime(destFilePath, !isDir, creationTime, lastAccessTime, lastWriteTime);
 }
 
 void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
@@ -82,26 +101,9 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
         }
         FindClose(destHFind);
 
-        PFILETIME creationTime, lastAccessTime, lastWriteTime;
-
-        if (CompareFileTime(&sourceFindFileData.ftCreationTime, &destFindFileData.ftCreationTime) < 0)
-            creationTime = &sourceFindFileData.ftCreationTime;
-        else
-            creationTime = NULL; // = &destFindFileData.ftCreationTime
-
-        if (CompareFileTime(&sourceFindFileData.ftLastAccessTime, &destFindFileData.ftLastAccessTime) < 0)
-            lastAccessTime = &sourceFindFileData.ftLastAccessTime;
-        else
-            lastAccessTime = NULL;
-
-        if (CompareFileTime(&sourceFindFileData.ftLastWriteTime, &destFindFileData.ftLastWriteTime) < 0)
-            lastWriteTime = &sourceFindFileData.ftLastWriteTime;
-        else
-            lastWriteTime = NULL;
+        UpdateFileTimeIfEarlier(sourceFindFileData, destFindFileData, destFilePath);
 
         bool isDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-        if (creationTime != NULL || lastAccessTime != NULL || lastWriteTime != NULL)
-            FixFileTime(destFilePath, !isDir, creationTime, lastAccessTime, lastWriteTime);
 
         wstring sourceFilePath = sourcePath + L"\\" + sourceFileName;
         if (isDir)
