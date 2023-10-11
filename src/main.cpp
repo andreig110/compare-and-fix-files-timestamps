@@ -117,6 +117,51 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
     FindClose(sourceHFind);
 }
 
+void ProcessFilesOrDirs(const wstring& sourcePath, const wstring& destPath)
+{
+    // Find the source file or directory
+    WIN32_FIND_DATAW sourceFindFileData;
+    HANDLE sourceHFind = FindFirstFileW(sourcePath.c_str(), &sourceFindFileData);
+    if (sourceHFind == INVALID_HANDLE_VALUE)
+    {
+        wcout << "No source file or directory: " << sourcePath << endl;
+        PrintLastError();
+        return;
+    }
+    FindClose(sourceHFind);
+
+    // Find the destination file or directory
+    WIN32_FIND_DATAW destFindFileData;
+    HANDLE destHFind = FindFirstFileW(destPath.c_str(), &destFindFileData);
+    if (destHFind == INVALID_HANDLE_VALUE)
+    {
+        wcout << "No destination file or directory: " << destPath << endl;
+        PrintLastError();
+        return;
+    }
+    FindClose(destHFind);
+
+    // Update the destination file's timestamps if the source file's timestamps is earlier
+    UpdateFileTimeIfEarlier(sourceFindFileData, destFindFileData, destPath);
+
+    // Recursively process directories if the option is enabled
+    if (programOptions.recurseSubDirs)
+    {
+        bool sourceIsDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        bool destIsDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        if (sourceIsDir && destIsDir)
+            ProcessDirsRecursively(sourcePath, destPath);
+        else
+        {
+            wcout << "Cannot process directories recursively:" << endl;
+            if (!sourceIsDir)
+                wcout << "- The source is not a directory: " << sourcePath << endl;
+            if (!destIsDir)
+                wcout << "- The destination is not a directory: " << destPath << endl;
+        }
+    }
+}
+
 int wmain(int argc, wchar_t* argv[])
 {
     // Change stdout to Unicode UTF-16 mode.
@@ -163,7 +208,7 @@ int wmain(int argc, wchar_t* argv[])
         wcout << "Fixing files timestamp:" << endl;
 
     auto start = high_resolution_clock::now();
-    ProcessDirsRecursively(sourcePath, destPath);
+    ProcessFilesOrDirs(sourcePath, destPath);
     auto end = high_resolution_clock::now();
 
     auto tpDuration = (end - start).count();
