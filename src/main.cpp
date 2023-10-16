@@ -90,7 +90,7 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
         if (sourceFileName == L"." || sourceFileName == L"..")
             continue;
 
-        // Find the corresponding file in the destination folder (if exists).
+        // Find the corresponding file in the destination directory (if exists).
         wstring destFilePath = destPath + L"\\" + sourceFileName;
         WIN32_FIND_DATAW destFindFileData;
         HANDLE destHFind = FindFirstFileW(destFilePath.c_str(), &destFindFileData);
@@ -103,10 +103,10 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
 
         UpdateFileTimeIfEarlier(sourceFindFileData, destFindFileData, destFilePath);
 
-        bool isDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-
         wstring sourceFilePath = sourcePath + L"\\" + sourceFileName;
-        if (isDir)
+        bool sourceIsDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        bool destIsDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        if (sourceIsDir && destIsDir)
             ProcessDirsRecursively(sourceFilePath, destFilePath);
     } while (FindNextFileW(sourceHFind, &sourceFindFileData));
 
