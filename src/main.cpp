@@ -108,6 +108,17 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
         bool destIsDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         if (sourceIsDir && destIsDir)
             ProcessDirsRecursively(sourceFilePath, destFilePath);
+        else if (sourceIsDir || destIsDir)
+        {
+            wcout << "Unable to process directory "
+                << "\"" << sourceFileName << "\" "
+                << "in the " << (sourceIsDir ? "source" : "destination") << " directory "
+                << "\"" << (sourceIsDir ? sourcePath : destPath) << "\" "
+                << "because the object with the same name in the "
+                << (sourceIsDir ? "destination" : "source")
+                << " directory is a file, not a directory ... skipped."
+                << endl;
+        }
     } while (FindNextFileW(sourceHFind, &sourceFindFileData));
 
     DWORD lastError = GetLastError();
