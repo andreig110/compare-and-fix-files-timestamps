@@ -74,7 +74,9 @@ void UpdateFileTimeIfEarlier(WIN32_FIND_DATAW& sourceFindFileData, WIN32_FIND_DA
 
 void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
 {
+    // Construct a search path for the source directory
     wstring sourceSearchPath = sourcePath + L"\\*";
+    // Find the first file or directory in the source directory that matches the search path
     WIN32_FIND_DATAW sourceFindFileData;
     HANDLE sourceHFind = FindFirstFileW(sourceSearchPath.c_str(), &sourceFindFileData);
     if (sourceHFind == INVALID_HANDLE_VALUE)
@@ -84,14 +86,16 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
         return;
     }
 
+    // Loop through all files and directories in the source directory
     do
     {
         wstring sourceFileName = sourceFindFileData.cFileName;
         if (sourceFileName == L"." || sourceFileName == L"..")
             continue;
 
-        // Find the corresponding file in the destination directory (if exists).
+        // Construct a file path for the corresponding file or directory in the destination directory
         wstring destFilePath = destPath + L"\\" + sourceFileName;
+        // Find the corresponding file or directory in the destination directory (if exists)
         WIN32_FIND_DATAW destFindFileData;
         HANDLE destHFind = FindFirstFileW(destFilePath.c_str(), &destFindFileData);
         if (destHFind == INVALID_HANDLE_VALUE)
@@ -101,22 +105,28 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
         }
         FindClose(destHFind);
 
+        // Update the destination file's timestamps if the source file's timestamps is earlier
         UpdateFileTimeIfEarlier(sourceFindFileData, destFindFileData, destFilePath);
 
+        // Construct a file path for the file or directory in the source directory
         wstring sourceFilePath = sourcePath + L"\\" + sourceFileName;
         bool sourceIsDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         bool destIsDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        // Recursively process directories if both source and destination are directories
         if (sourceIsDir && destIsDir)
             ProcessDirsRecursively(sourceFilePath, destFilePath);
         else if (sourceIsDir || destIsDir)
         {
-            wcout << "Unable to process directory "
+            // Print a warning message if the source/destination directory
+            // cannot be processed because either only the source is a directory
+            // or only the destination is a directory.
+            wcout << "Warning: Unable to process directory "
                 << "\"" << sourceFileName << "\" "
                 << "in the " << (sourceIsDir ? "source" : "destination") << " directory "
                 << "\"" << (sourceIsDir ? sourcePath : destPath) << "\" "
                 << "because the object with the same name in the "
                 << (sourceIsDir ? "destination" : "source")
-                << " directory is a file, not a directory ... skipped."
+                << " directory is a file, not a directory. ... skipped."
                 << endl;
         }
     } while (FindNextFileW(sourceHFind, &sourceFindFileData));
