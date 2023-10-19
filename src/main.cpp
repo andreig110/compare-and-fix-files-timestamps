@@ -15,9 +15,42 @@ struct ProgramOptions
     bool simulate; // Do not change files timestamp. The program will not make any changes to the file system.
 } programOptions;
 
+// A struct to store statistical data
+struct Stats
+{
+    int numFiles = 0;        // Total number of files in the source directory
+    int numDirs = 0;         // Total number of directories in the source directory
+    int numMissingFiles = 0; // Number of missing files in the destination directory
+    int numMissingDirs = 0;  // Number of missing directories in the destination directory
+    int numFixedFiles = 0;   // Number of fixed files in the destination directory
+    int numFixedDirs = 0;    // Number of fixed directories in the destination directory
+    int numUnfixedFiles = 0; // Number of unfixed files in the destination directory
+    int numUnfixedDirs = 0;  // Number of unfixed directories in the destination directory
+} stats;
+
 void PrintLastError()
 {
     wcout << "- Last error: " << GetLastError() << endl;
+}
+
+// Function to print statistical data
+void PrintStats()
+{
+    wcout << "Total number of files in the source directory: " << stats.numFiles << endl;
+    wcout << "Total number of directories in the source directory: " << stats.numDirs << endl;
+    wcout << "Total number of files and directories in the source directory: " << stats.numFiles + stats.numDirs << endl << endl;
+
+    wcout << "Number of missing files in the destination directory: " << stats.numMissingFiles << endl;
+    wcout << "Number of missing directories in the destination directory: " << stats.numMissingDirs << endl;
+    wcout << "Total number of missing files and directories in the destination directory: " << stats.numMissingFiles + stats.numMissingDirs << endl << endl;
+
+    wcout << "Number of fixed files in the destination directory: " << stats.numFixedFiles << endl;
+    wcout << "Number of fixed directories in the destination directory: " << stats.numFixedDirs << endl;
+    wcout << "Total number of fixed files and directories in the destination directory: " << stats.numFixedFiles + stats.numFixedDirs << endl << endl;
+
+    wcout << "Number of unfixed files in the destination directory: " << stats.numUnfixedFiles << endl;
+    wcout << "Number of unfixed directories in the destination directory: " << stats.numUnfixedDirs << endl;
+    wcout << "Total number of unfixed files and directories in the destination directory: " << stats.numUnfixedFiles + stats.numUnfixedDirs << endl << endl;
 }
 
 void FixFileTime(const wstring& destFilePath, bool isFile,
