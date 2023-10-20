@@ -133,7 +133,17 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
         HANDLE destHFind = FindFirstFileW(destFilePath.c_str(), &destFindFileData);
         if (destHFind == INVALID_HANDLE_VALUE)
         {
-            // TODO: statistics
+            // Update the number of missing files/directories and print info about the missing file/directory
+            if (sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                stats.numMissingDirs++;
+                wcout << "Hint: Missing directory in the destination directory: " << destFilePath << endl;
+            }
+            else
+            {
+                stats.numMissingFiles++;
+                wcout << "Hint: Missing file in the destination directory: " << destFilePath << endl;
+            }
             continue;
         }
         FindClose(destHFind);
