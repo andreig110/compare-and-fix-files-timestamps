@@ -33,6 +33,42 @@ void PrintLastError()
     wcout << "- Last error: " << GetLastError() << endl;
 }
 
+// Function to update the number of files/directories in the Stats struct
+void UpdateFilesDirsStats(bool isDir)
+{
+    if (isDir)
+        stats.numDirs++;
+    else
+        stats.numFiles++;
+}
+
+// Function to update the number of missing files/directories in the Stats struct
+void UpdateMissingStats(bool isDir)
+{
+    if (isDir)
+        stats.numMissingDirs++;
+    else
+        stats.numMissingFiles++;
+}
+
+// Function to update the number of fixed files/directories in the Stats struct
+void UpdateFixedStats(bool isFile)
+{
+    if (isFile)
+        stats.numFixedFiles++;
+    else
+        stats.numFixedDirs++;
+}
+
+// Function to update the number of unfixed files/directories in the Stats struct
+void UpdateUnfixedStats(bool isFile)
+{
+    if (isFile)
+        stats.numUnfixedFiles++;
+    else
+        stats.numUnfixedDirs++;
+}
+
 // Function to print statistical data
 void PrintStats()
 {
@@ -66,17 +102,22 @@ void FixFileTime(const wstring& destFilePath, bool isFile,
     {
         wcout << "Error opening file with the GENERIC_WRITE access right: " << destFilePath << endl;
         PrintLastError();
+        UpdateUnfixedStats(isFile);
         return;
     }
 
     wcout << destFilePath << " ... ";
     BOOL result = SetFileTime(hFile, creationTime, lastAccessTime, lastWriteTime);
     if (result)
+    {
         wcout << "done." << endl;
+        UpdateFixedStats(isFile);
+    }
     else
     {
         wcout << "error!" << endl;
         PrintLastError();
+        UpdateUnfixedStats(isFile);
     }
     CloseHandle(hFile);
 }
@@ -126,6 +167,9 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
         if (sourceFileName == L"." || sourceFileName == L"..")
             continue;
 
+        bool sourceIsDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        UpdateFilesDirsStats(sourceIsDir);
+
         // Construct a file path for the corresponding file or directory in the destination directory
         wstring destFilePath = destPath + L"\\" + sourceFileName;
         // Find the corresponding file or directory in the destination directory (if exists)
@@ -134,16 +178,11 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
         if (destHFind == INVALID_HANDLE_VALUE)
         {
             // Update the number of missing files/directories and print info about the missing file/directory
-            if (sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            {
-                stats.numMissingDirs++;
+            if (sourceIsDir)
                 wcout << "Hint: Missing directory in the destination directory: " << destFilePath << endl;
-            }
             else
-            {
-                stats.numMissingFiles++;
                 wcout << "Hint: Missing file in the destination directory: " << destFilePath << endl;
-            }
+            UpdateMissingStats(sourceIsDir);
             continue;
         }
         FindClose(destHFind);
@@ -153,7 +192,6 @@ void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
 
         // Construct a file path for the file or directory in the source directory
         wstring sourceFilePath = sourcePath + L"\\" + sourceFileName;
-        bool sourceIsDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         bool destIsDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         // Recursively process directories if both source and destination are directories
         if (sourceIsDir && destIsDir)
@@ -194,6 +232,9 @@ void ProcessFilesOrDirs(const wstring& sourcePath, const wstring& destPath)
     }
     FindClose(sourceHFind);
 
+    bool sourceIsDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+    UpdateFilesDirsStats(sourceIsDir);
+
     // Find the destination file or directory
     WIN32_FIND_DATAW destFindFileData;
     HANDLE destHFind = FindFirstFileW(destPath.c_str(), &destFindFileData);
@@ -201,6 +242,7 @@ void ProcessFilesOrDirs(const wstring& sourcePath, const wstring& destPath)
     {
         wcout << "No destination file or directory: " << destPath << endl;
         PrintLastError();
+        UpdateMissingStats(sourceIsDir);
         return;
     }
     FindClose(destHFind);
@@ -211,7 +253,6 @@ void ProcessFilesOrDirs(const wstring& sourcePath, const wstring& destPath)
     // Recursively process directories if the option is enabled
     if (programOptions.recurseSubDirs)
     {
-        bool sourceIsDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         bool destIsDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         if (sourceIsDir && destIsDir)
             ProcessDirsRecursively(sourcePath, destPath);
@@ -282,6 +323,7 @@ int wmain(int argc, wchar_t* argv[])
 
     // Printing statistics.
     wcout << endl << "Statistics:" << endl;
+    PrintStats();
     wcout << "Execution time: " << duration << unit << endl;
 
     return 0;
