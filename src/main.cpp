@@ -122,26 +122,31 @@ void FixFileTime(const wstring& destFilePath, bool isFile,
     CloseHandle(hFile);
 }
 
+// Update the destination file's timestamps if the source file's timestamps is earlier
 void UpdateFileTimeIfEarlier(WIN32_FIND_DATAW& sourceFindFileData, WIN32_FIND_DATAW& destFindFileData, const wstring& destFilePath)
 {
     PFILETIME creationTime, lastAccessTime, lastWriteTime;
 
+    // Check if the source file's creation timestamp is earlier than the destination file's creation timestamp
     if (CompareFileTime(&sourceFindFileData.ftCreationTime, &destFindFileData.ftCreationTime) < 0)
         creationTime = &sourceFindFileData.ftCreationTime;
     else
         creationTime = NULL; // = &destFindFileData.ftCreationTime
 
+    // Check if the source file's last access timestamp is earlier than the destination file's last access timestamp
     if (CompareFileTime(&sourceFindFileData.ftLastAccessTime, &destFindFileData.ftLastAccessTime) < 0)
         lastAccessTime = &sourceFindFileData.ftLastAccessTime;
     else
         lastAccessTime = NULL;
 
+    // Check if the source file's last write timestamp is earlier than the destination file's last write timestamp
     if (CompareFileTime(&sourceFindFileData.ftLastWriteTime, &destFindFileData.ftLastWriteTime) < 0)
         lastWriteTime = &sourceFindFileData.ftLastWriteTime;
     else
         lastWriteTime = NULL;
 
-    bool isDir = sourceFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+    // Call FixFileTime() to update the destination file's timestamps if needed
+    bool isDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
     if (creationTime != NULL || lastAccessTime != NULL || lastWriteTime != NULL)
         FixFileTime(destFilePath, !isDir, creationTime, lastAccessTime, lastWriteTime);
 }
