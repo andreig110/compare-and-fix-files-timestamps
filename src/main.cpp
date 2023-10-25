@@ -1,18 +1,18 @@
-#include <iostream>
-#include <string>
-#include <chrono>
-
 #include <io.h>
 #include <fcntl.h>
 #include <windows.h>
+
+#include <iostream>
+#include <string>
+#include <chrono>
 
 using namespace std;
 using namespace std::chrono;
 
 struct ProgramOptions
 {
-    bool recurseSubDirs; // Recurse subdirectories.
-    bool simulate; // Do not change files timestamp. The program will not make any changes to the file system.
+    bool recurseSubDirs; // Recurse the subdirectories
+    bool simulate; // Do not change the timestamps of the files. The program will not make any changes to the file system.
 } programOptions;
 
 // A struct to store statistical data
@@ -27,11 +27,6 @@ struct Stats
     int numUnfixedFiles = 0; // Number of unfixed files in the destination directory
     int numUnfixedDirs = 0;  // Number of unfixed directories in the destination directory
 } stats;
-
-void PrintLastError()
-{
-    wcout << "- Last error: " << GetLastError() << endl;
-}
 
 // Function to update the number of files/directories in the Stats struct
 void UpdateFilesDirsStats(bool isDir)
@@ -87,6 +82,11 @@ void PrintStats()
     wcout << "Number of unfixed files in the destination directory: " << stats.numUnfixedFiles << endl;
     wcout << "Number of unfixed directories in the destination directory: " << stats.numUnfixedDirs << endl;
     wcout << "Total number of unfixed files and directories in the destination directory: " << stats.numUnfixedFiles + stats.numUnfixedDirs << endl << endl;
+}
+
+void PrintLastError()
+{
+    wcout << "- Last error: " << GetLastError() << endl;
 }
 
 void FixFileTime(const wstring& destFilePath, bool isFile,
@@ -274,7 +274,7 @@ void ProcessFilesOrDirs(const wstring& sourcePath, const wstring& destPath)
 
 int wmain(int argc, wchar_t* argv[])
 {
-    // Change stdout to Unicode UTF-16 mode.
+    // Change stdout to Unicode UTF-16 mode
     _setmode(_fileno(stdout), _O_U16TEXT);
 
     if (argc < 3)
@@ -283,7 +283,7 @@ int wmain(int argc, wchar_t* argv[])
         return 1;
     }
 
-    // Parse command line arguments.
+    // Parse the command line arguments
     wstring sourcePath, destPath;
     if (argc == 3)
     {
@@ -292,7 +292,7 @@ int wmain(int argc, wchar_t* argv[])
     }
     else //if (argc > 3)
     {
-        // Set program options from command line arguments.
+        // Set program options from command line arguments
         for (int i = 1; i < argc - 2; ++i)
         {
             if (wcscmp(argv[i], L"-r") == 0)
@@ -312,10 +312,10 @@ int wmain(int argc, wchar_t* argv[])
     if (programOptions.simulate)
     {
         wcout << "Simulating..." << endl;
-        wcout << "The timestamp of the next files should be fixed:" << endl;
+        wcout << "The timestamps for the following files should be fixed:" << endl;
     }
     else
-        wcout << "Fixing files timestamp:" << endl;
+        wcout << "Fixing the files' timestamps:" << endl;
 
     auto start = high_resolution_clock::now();
     ProcessFilesOrDirs(sourcePath, destPath);
@@ -326,7 +326,7 @@ int wmain(int argc, wchar_t* argv[])
     wstring unit = L" \u03BCs";
     duration = int(duration * 10.0) / 10.0;
 
-    // Printing statistics.
+    // Print statistics
     wcout << endl << "Statistics:" << endl;
     PrintStats();
     wcout << "Execution time: " << duration << unit << endl;
