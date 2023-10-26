@@ -277,22 +277,16 @@ int wmain(int argc, wchar_t* argv[])
     // Change stdout to Unicode UTF-16 mode
     _setmode(_fileno(stdout), _O_U16TEXT);
 
+    // Print usage if not enough arguments
     if (argc < 3)
     {
         wcout << "Usage: cfft.exe [options] <source> <destination>" << endl;
         return 1;
     }
 
-    // Parse the command line arguments
-    wstring sourcePath, destPath;
-    if (argc == 3)
+    // Set program options from command line arguments
+    if (argc > 3)
     {
-        sourcePath = argv[1];
-        destPath = argv[2];
-    }
-    else //if (argc > 3)
-    {
-        // Set program options from command line arguments
         for (int i = 1; i < argc - 2; ++i)
         {
             if (wcscmp(argv[i], L"-r") == 0)
@@ -305,9 +299,10 @@ int wmain(int argc, wchar_t* argv[])
                 return 2;
             }
         }
-        sourcePath = argv[argc - 2];
-        destPath = argv[argc - 1];
     }
+
+    wstring sourcePath = argv[argc - 2];
+    wstring destPath = argv[argc - 1];
 
     if (programOptions.simulate)
     {
