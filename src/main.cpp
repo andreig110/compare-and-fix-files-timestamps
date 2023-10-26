@@ -122,7 +122,7 @@ void FixFileTime(const wstring& destFilePath, bool isFile,
     CloseHandle(hFile);
 }
 
-// Update the destination file's timestamps if the source file's timestamps is earlier
+// Update the destination file's timestamps if the source file's timestamps are earlier
 void UpdateFileTimeIfEarlier(WIN32_FIND_DATAW& sourceFindFileData, WIN32_FIND_DATAW& destFindFileData, const wstring& destFilePath)
 {
     PFILETIME creationTime, lastAccessTime, lastWriteTime;
@@ -145,10 +145,19 @@ void UpdateFileTimeIfEarlier(WIN32_FIND_DATAW& sourceFindFileData, WIN32_FIND_DA
     else
         lastWriteTime = NULL;
 
-    // Call FixFileTime() to update the destination file's timestamps if needed
-    bool isDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+    // Check if any of the timestamps need to be updated
     if (creationTime != NULL || lastAccessTime != NULL || lastWriteTime != NULL)
-        FixFileTime(destFilePath, !isDir, creationTime, lastAccessTime, lastWriteTime);
+    {
+        // Check if simulation mode is not enabled
+        if (!programOptions.simulate)
+        {
+            // Call FixFileTime() to update the destination file's timestamps
+            bool isDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+            FixFileTime(destFilePath, !isDir, creationTime, lastAccessTime, lastWriteTime);
+        }
+        else
+            wcout << destFilePath << endl; // Print the path of the file whose timestamps need to be fixed
+    }
 }
 
 void ProcessDirsRecursively(const wstring& sourcePath, const wstring& destPath)
