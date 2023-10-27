@@ -327,7 +327,7 @@ int wmain(int argc, wchar_t* argv[])
     ProcessFilesOrDirs(sourcePath, destPath);
     auto end = high_resolution_clock::now();
 
-    auto duration = (end - start).count();
+    auto duration = duration_cast<nanoseconds>(end - start).count(); // nanoseconds
 
     // Print statistics
     wcout << endl << "Statistics:" << endl;

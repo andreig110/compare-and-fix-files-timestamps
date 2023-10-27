@@ -4,4 +4,5 @@
 
 using namespace std;
 
-wstring FormatDuration(long long llDuration);
+// This function takes a duration in nanoseconds and formats it as a wstring with the appropriate unit of time
+wstring FormatDuration(long long nanoseconds);
