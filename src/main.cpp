@@ -6,6 +6,8 @@
 #include <string>
 #include <chrono>
 
+#include "utils.h"
+
 using namespace std;
 using namespace std::chrono;
 
@@ -325,15 +327,12 @@ int wmain(int argc, wchar_t* argv[])
     ProcessFilesOrDirs(sourcePath, destPath);
     auto end = high_resolution_clock::now();
 
-    auto tpDuration = (end - start).count();
-    double duration = tpDuration / 1e3;
-    wstring unit = L" \u03BCs";
-    duration = int(duration * 10.0) / 10.0;
+    auto duration = (end - start).count();
 
     // Print statistics
     wcout << endl << "Statistics:" << endl;
     PrintStats();
-    wcout << "Execution time: " << duration << unit << endl;
+    wcout << "Execution time: " << FormatDuration(duration) << endl;
 
     return 0;
 }
