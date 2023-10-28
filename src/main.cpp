@@ -150,15 +150,18 @@ void UpdateFileTimeIfEarlier(WIN32_FIND_DATAW& sourceFindFileData, WIN32_FIND_DA
     // Check if any of the timestamps need to be updated
     if (creationTime != NULL || lastAccessTime != NULL || lastWriteTime != NULL)
     {
+        bool isDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         // Check if simulation mode is not enabled
         if (!programOptions.simulate)
         {
             // Call FixFileTime() to update the destination file's timestamps
-            bool isDir = destFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
             FixFileTime(destFilePath, !isDir, creationTime, lastAccessTime, lastWriteTime);
         }
-        else
+        else // if simulation mode is enabled
+        {
             wcout << destFilePath << endl; // Print the path of the file whose timestamps need to be fixed
+            UpdateFixedStats(!isDir);
+        }
     }
 }
 
