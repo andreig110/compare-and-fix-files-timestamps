@@ -2,6 +2,12 @@
 
 #include <format>
 
+bool FileOrDirExists(const wstring &fileName)
+{
+    DWORD fileAttributes = GetFileAttributesW(fileName.c_str());
+    return (fileAttributes != INVALID_FILE_ATTRIBUTES);
+}
+
 wstring FormatDuration(long long nanoseconds)
 {
     double duration;

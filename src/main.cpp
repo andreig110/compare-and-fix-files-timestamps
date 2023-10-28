@@ -1,6 +1,6 @@
 #include <io.h>
 #include <fcntl.h>
-#include <windows.h>
+#include <Windows.h>
 
 #include <iostream>
 #include <string>
@@ -314,6 +314,18 @@ int wmain(int argc, wchar_t* argv[])
 
     wstring sourcePath = argv[argc - 2];
     wstring destPath = argv[argc - 1];
+
+    if (!FileOrDirExists(sourcePath))
+    {
+        wcout << "No source file or directory: " << sourcePath << endl;
+        return 3;
+    }
+
+    if (!FileOrDirExists(destPath))
+    {
+        wcout << "No destination file or directory: " << destPath << endl;
+        return 4;
+    }
 
     if (programOptions.simulate)
     {
