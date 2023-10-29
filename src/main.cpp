@@ -159,8 +159,13 @@ void UpdateFileTimeIfEarlier(WIN32_FIND_DATAW& sourceFindFileData, WIN32_FIND_DA
         }
         else // if simulation mode is enabled
         {
-            wcout << destFilePath << endl; // Print the path of the file whose timestamps need to be fixed
-            UpdateFixedStats(!isDir);
+            wcout << destFilePath; // Print the path of the file whose timestamps need to be fixed
+            wcout << "  ("
+                << ((creationTime != NULL) ? "cr, " : "")
+                << ((lastAccessTime != NULL) ? "la, " : "")
+                << ((lastWriteTime != NULL) ? "lw)" : ")")
+                << endl;
+            UpdateUnfixedStats(!isDir);
         }
     }
 }
